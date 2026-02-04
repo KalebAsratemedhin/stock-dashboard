@@ -1,0 +1,137 @@
+services:
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    container_name: stock-dashboard-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: stock_dashboard
+    ports:
+      - "5432:5432"
+    volumes:
+      - timescaledb_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - stock-dashboard-network
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: stock-dashboard-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - stock-dashboard-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: stock-dashboard-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - stock-dashboard-network
+
+  # Backend API service
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: stock-dashboard-api
+    environment:
+      DB_HOST: timescaledb
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: stock_dashboard
+      DB_SSLMODE: disable
+      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672/
+      REDIS_URL: redis://redis:6379
+      API_PORT: 8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: ["/app/bin/api"]
+    networks:
+      - stock-dashboard-network
+    restart: unless-stopped
+
+  # Worker service
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: stock-dashboard-worker
+    environment:
+      DB_HOST: timescaledb
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: stock_dashboard
+      DB_SSLMODE: disable
+      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672/
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: ["/app/bin/worker"]
+    networks:
+      - stock-dashboard-network
+    restart: unless-stopped
+
+  # Data simulator service
+  simulator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: stock-dashboard-simulator
+    environment:
+      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672/
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      worker:
+        condition: service_started
+    command: ["/app/bin/simulator"]
+    networks:
+      - stock-dashboard-network
+    restart: unless-stopped
+
+volumes:
+  timescaledb_data:
+  rabbitmq_data:
+  redis_data:
+
+networks:
+  stock-dashboard-network:
+    driver: bridge
