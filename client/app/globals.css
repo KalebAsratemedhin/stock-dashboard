@@ -1,0 +1,96 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 15 17 21;
+    --foreground: 248 250 252;
+    --card: 26 29 35;
+    --card-foreground: 248 250 252;
+    --popover: 26 29 35;
+    --popover-foreground: 248 250 252;
+    --primary: 255 138 0;
+    --primary-foreground: 15 17 21;
+    --secondary: 0 255 255;
+    --secondary-foreground: 15 17 21;
+    --muted: 45 50 59;
+    --muted-foreground: 148 163 184;
+    --accent: 255 138 0;
+    --accent-foreground: 15 17 21;
+    --destructive: 239 68 68;
+    --destructive-foreground: 248 250 252;
+    --border: 45 50 59;
+    --input: 45 50 59;
+    --ring: 255 138 0;
+    --radius: 0.5rem;
+    --chart-1: 255 138 0;
+    --chart-2: 0 255 255;
+    --chart-3: 34 197 94;
+    --chart-4: 239 68 68;
+    --chart-5: 168 85 247;
+    
+    --cyber-orange: #FF8A00;
+    --cyan-accent: #00FFFF;
+    --midnight-slate: #0F1115;
+    --surface-slate: #1A1D23;
+    --border-slate: #2D323B;
+    --node-white: #F8FAFC;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-midnight-slate text-node-white;
+    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  }
+}
+
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+.status-glow-orange {
+  box-shadow: 0 0 15px rgba(255, 138, 0, 0.2);
+}
+
+.grid-bg {
+  background-image: radial-gradient(#FF8A00 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 10px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: #FF8A00;
+}

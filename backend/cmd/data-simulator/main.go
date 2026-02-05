@@ -52,7 +52,7 @@ func main() {
 }
 
 func simulateStockData(gen *generator.StockGenerator, publisher *queue.Publisher, symbols []string, stopChan chan struct{}, prevQuotes map[string]*models.StockQuote) {
-	ticker := time.NewTicker(5 * time.Second)
+	ticker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
 
 	for {
@@ -60,7 +60,8 @@ func simulateStockData(gen *generator.StockGenerator, publisher *queue.Publisher
 		case <-stopChan:
 			return
 		case <-ticker.C:
-			if !isMarketOpen(time.Now()) {
+			respectMarketHours := os.Getenv("SIMULATE_MARKET_HOURS") != "false"
+			if respectMarketHours && !isMarketOpen(time.Now()) {
 				continue
 			}
 
@@ -78,7 +79,7 @@ func simulateStockData(gen *generator.StockGenerator, publisher *queue.Publisher
 }
 
 func simulateSalesData(gen *generator.SalesGenerator, publisher *queue.Publisher, stopChan chan struct{}) {
-	interval := 10 + time.Duration(time.Now().Unix()%20)*time.Second
+	interval := 60 + time.Duration(time.Now().Unix()%60)*time.Second
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
@@ -92,14 +93,14 @@ func simulateSalesData(gen *generator.SalesGenerator, publisher *queue.Publisher
 				log.Printf("Error publishing sale: %v", err)
 			}
 			
-			interval = 10 + time.Duration(time.Now().Unix()%20)*time.Second
+			interval = 60 + time.Duration(time.Now().Unix()%60)*time.Second
 			ticker.Reset(interval)
 		}
 	}
 }
 
 func simulateUserEvents(gen *generator.UserEventGenerator, publisher *queue.Publisher, stopChan chan struct{}) {
-	ticker := time.NewTicker(2 * time.Second)
+	ticker := time.NewTicker(15 * time.Second)
 	defer ticker.Stop()
 
 	for {
@@ -107,7 +108,7 @@ func simulateUserEvents(gen *generator.UserEventGenerator, publisher *queue.Publ
 		case <-stopChan:
 			return
 		case <-ticker.C:
-			eventsCount := 1 + int(time.Now().Unix()%5)
+			eventsCount := 1 + int(time.Now().Unix()%3)
 			for i := 0; i < eventsCount; i++ {
 				event := gen.GenerateEvent(time.Now())
 				if err := publisher.PublishUserEvent(queue.UserEventsQueue, event); err != nil {
@@ -119,7 +120,7 @@ func simulateUserEvents(gen *generator.UserEventGenerator, publisher *queue.Publ
 }
 
 func simulateFinancialMetrics(gen *generator.FinancialGenerator, publisher *queue.Publisher, stopChan chan struct{}) {
-	interval := 2 + time.Duration(time.Now().Unix()%3)*time.Minute
+	interval := 5 + time.Duration(time.Now().Unix()%5)*time.Minute
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
@@ -133,7 +134,7 @@ func simulateFinancialMetrics(gen *generator.FinancialGenerator, publisher *queu
 				log.Printf("Error publishing financial metric: %v", err)
 			}
 			
-			interval = 2 + time.Duration(time.Now().Unix()%3)*time.Minute
+			interval = 5 + time.Duration(time.Now().Unix()%5)*time.Minute
 			ticker.Reset(interval)
 		}
 	}

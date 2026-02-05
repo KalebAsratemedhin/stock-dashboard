@@ -37,6 +37,9 @@ func (s *userEventService) CreateEvent(event *models.UserEvent) error {
 	if event.Timestamp.IsZero() {
 		event.Timestamp = time.Now()
 	}
+	if event.Metadata == "" {
+		event.Metadata = "{}"
+	}
 	return s.repo.Create(event)
 }
 
@@ -47,6 +50,9 @@ func (s *userEventService) BatchCreateEvents(events []*models.UserEvent) error {
 		}
 		if event.Timestamp.IsZero() {
 			event.Timestamp = time.Now()
+		}
+		if event.Metadata == "" {
+			event.Metadata = "{}"
 		}
 	}
 	return s.repo.BatchCreate(events)

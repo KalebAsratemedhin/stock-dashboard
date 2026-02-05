@@ -57,6 +57,7 @@ func (ueg *UserEventGenerator) GenerateEvent(timestamp time.Time) *models.UserEv
 		Country:   country,
 		City:      city,
 		Referrer:  generateReferrer(),
+		Metadata:  "{}",
 	}
 }
 

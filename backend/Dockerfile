@@ -36,3 +36,5 @@ COPY --from=builder /app/migrations /app/migrations
 # Default command (can be overridden in docker-compose)
 CMD ["/app/bin/api"]
 
+
+

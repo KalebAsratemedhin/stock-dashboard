@@ -117,6 +117,8 @@ services:
     container_name: stock-dashboard-simulator
     environment:
       RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672/
+      # Set to "false" to generate stock data 24/7 (dev/demo); default respects market hours (9–16 weekdays)
+      SIMULATE_MARKET_HOURS: "false"
     depends_on:
       rabbitmq:
         condition: service_healthy

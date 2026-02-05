@@ -46,9 +46,19 @@ func (c *Config) ConnectionString() string {
 func Connect() error {
 	config := LoadConfig()
 	
+	logLevel := logger.Warn
+	if getEnv("DB_LOG_LEVEL", "") == "info" {
+		logLevel = logger.Info
+	} else if getEnv("DB_LOG_LEVEL", "") == "error" {
+		logLevel = logger.Error
+	} else if getEnv("DB_LOG_LEVEL", "") == "silent" {
+		logLevel = logger.Silent
+	}
+	
 	var err error
+	fmt.Println(config.ConnectionString(),"connection string")
 	DB, err = gorm.Open(postgres.Open(config.ConnectionString()), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Info),
+		Logger: logger.Default.LogMode(logLevel),
 	})
 	
 	if err != nil {

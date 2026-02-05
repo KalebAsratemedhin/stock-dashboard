@@ -25,7 +25,8 @@ func NewStockGenerator(symbols []string) *StockGenerator {
 
 	for _, symbol := range symbols {
 		sg.basePrices[symbol] = 50 + sg.rng.Float64()*200
-		sg.volatilities[symbol] = 0.02 + sg.rng.Float64()*0.05
+		// Per-step volatility (0.04–0.12) gives ~0.5–2% moves per tick for more realistic charts
+		sg.volatilities[symbol] = 0.04 + sg.rng.Float64()*0.08
 	}
 
 	return sg
@@ -44,14 +45,23 @@ func (sg *StockGenerator) GenerateQuote(symbol string, prevQuote *models.StockQu
 	}
 
 	volatility := sg.volatilities[symbol]
-	
-	high := price * (1 + volatility*0.5)
-	low := price * (1 - volatility*0.5)
-	open := prevQuote.Close
+	// Wider high/low range for more realistic bar charts
+	barRange := volatility * 1.5
+	var open, high, low float64
 	if prevQuote == nil {
 		open = price
-		high = price * (1 + volatility)
-		low = price * (1 - volatility)
+		high = price * (1 + barRange)
+		low = price * (1 - barRange)
+	} else {
+		open = prevQuote.Close
+		high = math.Max(open, price) * (1 + barRange*0.5)
+		low = math.Min(open, price) * (1 - barRange*0.5)
+	}
+	if high < price {
+		high = price
+	}
+	if low > price {
+		low = price
 	}
 
 	changeAmount := price - open
@@ -77,12 +87,14 @@ func (sg *StockGenerator) GenerateQuote(symbol string, prevQuote *models.StockQu
 
 func (sg *StockGenerator) nextPrice(symbol string, prevPrice float64) float64 {
 	volatility := sg.volatilities[symbol]
-	meanReversion := 0.1
+	// Light mean reversion so prices don't drift to infinity but still show clear moves
+	meanReversion := 0.02
 	basePrice := sg.basePrices[symbol]
 
-	dt := 1.0 / 252.0
-	drift := meanReversion * (basePrice - prevPrice) * dt
-	random := sg.rng.NormFloat64() * volatility * math.Sqrt(dt)
+	// Scale volatility so each 30s step has visible movement (~0.5–2% typical)
+	stepVol := volatility * 1.2
+	random := sg.rng.NormFloat64() * stepVol
+	drift := meanReversion * (basePrice - prevPrice) / basePrice
 
 	newPrice := prevPrice * math.Exp(drift + random)
 
